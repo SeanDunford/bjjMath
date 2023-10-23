@@ -1,2 +1,8 @@
-# bjjMath
-A go webscraper and api that allows you to predict a winner in a bjj match based on data from BjjHeroes 
+# References
+- https://go.dev/doc/faq#git_https
+- 
+
+
+# Deps 
+- http://go-colly.org/docs/introduction/install/
+- 

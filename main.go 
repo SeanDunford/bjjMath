@@ -1,0 +1,23 @@
+package main
+
+import (
+	"fmt"
+
+	"github.com/gocolly/colly"
+)
+
+func main() {
+	// https://www.bjjheroes.com/
+	// https://www.scrapingbee.com/blog/web-scraping-go/
+	c := colly.NewCollector(
+		colly.AllowedDomains("www.bjjheroes.com"),
+	)
+
+	c.OnHTML(".column-1", func(e *colly.HTMLElement) {
+		links := e.ChildAttrs("a", "href")
+		fmt.Println(links)
+	})
+
+	c.Visit("https://www.bjjheroes.com/a-z-bjj-fighters-list")
+
+}
