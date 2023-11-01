@@ -38,3 +38,9 @@ Currently they are using weird ?p=# url and want the actual resolved urls
 ## In memory graph db 
 - https://github.com/actyx/ipfs-sqlite-block-store
 - https://github.com/dpapathanasiou/simple-graph-go
+
+
+
+# Gotchas
+## Add protocol to scraping domain 
+must send `https://www.bjjheroes.com` not just `www...` weirdly it just failed silently would have expected an error. 

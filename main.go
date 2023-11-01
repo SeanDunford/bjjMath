@@ -2,15 +2,11 @@ package main
 
 import (
 	"encoding/csv"
-<<<<<<< HEAD
-	"fmt"
-	"log"
-=======
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
->>>>>>> 4ca3353 (Improvement: Caching .csv file)
+
 	"os"
 	"path/filepath"
 	"strconv"
@@ -18,17 +14,6 @@ import (
 	"github.com/gocolly/colly"
 )
 
-<<<<<<< HEAD
-const relativeHeroesListLocation = "./output/heroesList.csv"
-
-var heroesListLocation string
-
-const heroesUrl = "https://www.bjjheroes.com/a-z-bjj-fighters-list"
-
-func getAbsoluteFilePaths() {
-	var err error
-	heroesListLocation, err = filepath.Abs(relativeHeroesListLocation)
-=======
 const bjjHeroesDomain = "www.bjjheroes.com/"
 const outputPath = "./output/"
 const csvOutputPath = outputPath + "csv/"
@@ -42,9 +27,9 @@ const relativeAthletesHtmlLocation = htmlOutputPath + "athletesList.html"
 
 var athletesHtmlLocation string
 
-const athletesUrl = bjjHeroesDomain + "a-z-bjj-fighters-list"
+const athletesUrl = "https://" + bjjHeroesDomain + "a-z-bjj-fighters-list"
 
-const forceUpdateHtml = true
+const forceUpdateHtml = false
 const forceUpdateCsv = true
 
 func getAbsoluteFilePaths() {
@@ -54,19 +39,13 @@ func getAbsoluteFilePaths() {
 		log.Fatal(err)
 	}
 	athletesHtmlLocation, err = filepath.Abs(relativeAthletesHtmlLocation)
->>>>>>> 4ca3353 (Improvement: Caching .csv file)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-<<<<<<< HEAD
-func readHeroesListCSV() [][]string {
-	file, err := os.Open(heroesListLocation)
-=======
 func readAthletesListCSV() [][]string {
 	file, err := os.Open(athletesListLocation)
->>>>>>> 4ca3353 (Improvement: Caching .csv file)
 	if err != nil {
 		return nil
 	}
@@ -83,19 +62,6 @@ func readAthletesListCSV() [][]string {
 	return records
 }
 
-<<<<<<< HEAD
-func scrapeHeroesList() [][]string {
-	// https://www.bjjheroes.com/
-	// https://www.scrapingbee.com/blog/web-scraping-go/
-
-	// TODO: Add a short circuit to check if the file was cached recently
-	c := colly.NewCollector(
-		colly.AllowedDomains("www.bjjheroes.com"),
-	)
-
-	heroesData := [][]string{}
-	heroesData = append(heroesData, []string{"index", "firstName", "lastName", "nickName", "teamName", "url"})
-=======
 func athletesListCached() bool {
 	if _, err := os.Stat(athletesHtmlLocation); errors.Is(err, os.ErrNotExist) {
 		return false
@@ -112,7 +78,6 @@ func scrapeCachedHeroPage() [][]string {
 
 	athletesList := [][]string{}
 	athletesList = append(athletesList, []string{"index", "firstName", "lastName", "nickName", "teamName", "url"})
->>>>>>> 4ca3353 (Improvement: Caching .csv file)
 
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
@@ -121,20 +86,6 @@ func scrapeCachedHeroPage() [][]string {
 			nickName := rowEl.ChildText("td.column-3 > a")
 			teamName := rowEl.ChildText("td.column-4")
 			urlPath := rowEl.ChildAttrs("td.column-1 > a", "href")
-<<<<<<< HEAD
-			fullUrlPath := "https://www.bjjheroes.com" + urlPath[0]
-
-			heroesData = append(heroesData, []string{strconv.Itoa(i), firstName, lastName, nickName, teamName, fullUrlPath})
-		})
-	})
-
-	c.Visit(heroesUrl)
-	return heroesData
-}
-
-func writeHeroesListToCSv(list [][]string) {
-	csvFile, err := os.OpenFile(heroesListLocation, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-=======
 			fullUrlPath := bjjHeroesDomain + urlPath[0]
 
 			athletesList = append(athletesList, []string{strconv.Itoa(i), firstName, lastName, nickName, teamName, fullUrlPath})
@@ -192,7 +143,6 @@ func scrapeAthletesUrl() [][]string {
 
 func writeAthletesListToCSv(list [][]string) {
 	csvFile, err := os.OpenFile(athletesListLocation, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
->>>>>>> 4ca3353 (Improvement: Caching .csv file)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -204,17 +154,6 @@ func writeAthletesListToCSv(list [][]string) {
 	csvFile.Close()
 }
 
-<<<<<<< HEAD
-func main() {
-	fmt.Println("go")
-	getAbsoluteFilePaths()
-	var list = readHeroesListCSV()
-	if list == nil {
-		var urls = scrapeHeroesList()
-		writeHeroesListToCSv(urls)
-	}
-
-=======
 func createHeoresList() {
 	var urls [][]string
 	if athletesListCached() && !forceUpdateHtml {
@@ -238,6 +177,5 @@ func main() {
 
 	fmt.Println("Updated athletes list can be found at " + athletesListLocation)
 
->>>>>>> 4ca3353 (Improvement: Caching .csv file)
 	fmt.Println("fin")
 }
