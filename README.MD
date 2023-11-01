@@ -21,13 +21,10 @@ If a user beats gordon in EBI should that count for ADCC? What about points
 ## [] Cache local files 
 https://github.com/gocolly/colly/issues/193
 
-<<<<<<< HEAD
-=======
 ## Expire local file cache
 I need to be able to record when a file was cached locally and then use current date to validate/expire the cache date
 I think for now once a month or week would really be fine. 
 
->>>>>>> 4ca3353 (Improvement: Caching .csv file)
 ## [] REad local files 
 https://github.com/gocolly/colly/blob/master/_examples/local_files/local_files.go
 
