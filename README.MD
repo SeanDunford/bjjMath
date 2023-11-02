@@ -57,3 +57,21 @@ must send `https://www.bjjheroes.com` not just `www...` weirdly it just failed s
 
 ## Adding local pacakages 
 must run go mod init after 
+
+## Best way to organize code 
+I'd like to just have 
+
+/src 
+ - main.go
+ /package1
+  - package1.go
+ /package2
+   - package2.go
+ ...
+
+
+ but not sure entirely how to accomplish this. `main.go` should just setup the code with flags and then call
+ into the src/ packages. 
+
+ Go community pretty opinionated and have a standard
+ https://github.com/golang-standards/project-layout

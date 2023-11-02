@@ -51,25 +51,6 @@ func CreateHeoresList() {
 	writeAthletesListToCSv(urls)
 }
 
-func ReadAthletesListCSV() [][]string {
-	getAbsoluteFilePaths()
-	file, err := os.Open(athletesListLocation)
-	if err != nil {
-		return nil
-	}
-	reader := csv.NewReader(file)
-	// TODO: This is broken and not reading my csv input correctly
-	records, err := reader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(records) < 1 {
-		return nil
-	}
-	defer file.Close()
-	return records
-}
-
 func getAbsoluteFilePaths() {
 	var err error
 	athletesListLocation, err = filepath.Abs(relativeAthletesListLocation)
