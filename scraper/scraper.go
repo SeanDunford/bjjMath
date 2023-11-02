@@ -66,10 +66,10 @@ func writeUrlMappingToCsv(urlMapping map[string]string) {
 	}
 	csvwriter := csv.NewWriter(csvFile)
 	_ = csvwriter.Write([]string{"originalUrl", "resolvedUrl"})
-	for fullUrlPath, resolvedUrl := range(urlMapping)	{
+	for fullUrlPath, resolvedUrl := range urlMapping {
 		_ = csvwriter.Write([]string{fullUrlPath, resolvedUrl})
 	}
-	fmt.Println("Updated athletes list can be found at " + urlMappingLocation)	
+	fmt.Println("Updated athletes list can be found at " + urlMappingLocation)
 	csvwriter.Flush()
 	csvFile.Close()
 }
@@ -77,11 +77,11 @@ func writeUrlMappingToCsv(urlMapping map[string]string) {
 func resolveAthleteUrls(athletes [][]string) map[string]string {
 	urlMapping := make(map[string]string)
 	for i, a := range athletes[1:] {
-			fullUrlPath := a[5] // TODO: Replace with key/value mapping or interface
-			resolvedUrl := UrlResolver.ResolveUrl(fullUrlPath)
-			urlMapping[fullUrlPath] = resolvedUrl
-			fmt.Println(strconv.Itoa(i), ") ", resolvedUrl)
-			a[5] = resolvedUrl
+		fullUrlPath := a[5] // TODO: Replace with key/value mapping or interface
+		resolvedUrl := UrlResolver.ResolveUrl(fullUrlPath)
+		urlMapping[fullUrlPath] = resolvedUrl
+		fmt.Println(strconv.Itoa(i), ") ", resolvedUrl)
+		a[5] = resolvedUrl
 	}
 	return urlMapping
 }
@@ -123,7 +123,7 @@ func scrapeCachedHeroPage(limit int) [][]string {
 
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			if (i >= limit) {
+			if i > 1 && i >= limit {
 				return
 			}
 			firstName := rowEl.ChildText("td.column-1 > a")
@@ -170,7 +170,7 @@ func scrapeAthletesUrl(limit int) [][]string {
 
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			if (i >= limit) {
+			if i > 1 && i >= limit {
 				return
 			}
 			firstName := rowEl.ChildText("td.column-1 > a")

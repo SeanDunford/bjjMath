@@ -7,7 +7,7 @@ import (
 )
 
 const forceUpdateCsv = false
-const limit = 10
+const limit = -1
 
 // TODO: Make these flags configurable through binary params and add const forceUpdateHtml = true here
 
