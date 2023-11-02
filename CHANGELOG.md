@@ -1,3 +1,7 @@
+# 0.0.2
+Fully resolving urls and storing the mappings and basic athlete info in csv. Added sqllite as a dep but 
+haven't implemented it yet. 
+
 # 0.0.1
 Basic functionality of getting a list of athletes and their profiles from BjjHEroes complete. 
 Local caching also enabled for scraping and output to csv. 

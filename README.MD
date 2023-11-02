@@ -44,8 +44,19 @@ Update local cache and rescrape
 ## Resolve urls 
 Currently they are using weird ?p=# url and want the actual resolved urls 
 
+## SqlLite
 
-## In memory graph db 
+If you need to have sqlite first in your PATH, run:
+  echo 'export PATH="/usr/local/opt/sqlite/bin:$PATH"' >> ~/.zshrc
+
+For compilers to find sqlite you may need to set:
+  export LDFLAGS="-L/usr/local/opt/sqlite/lib"
+  export CPPFLAGS="-I/usr/local/opt/sqlite/include"
+
+For pkg-config to find sqlite you may need to set:
+  export PKG_CONFIG_PATH="/usr/local/opt/sqlite/lib/pkgconfig"
+
+### graph db with sqllite
 - https://github.com/actyx/ipfs-sqlite-block-store
 - https://github.com/dpapathanasiou/simple-graph-go
 

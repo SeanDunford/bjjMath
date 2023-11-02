@@ -7,6 +7,7 @@ import (
 )
 
 const forceUpdateCsv = false
+const limit = 10
 
 // TODO: Make these flags configurable through binary params and add const forceUpdateHtml = true here
 
@@ -18,7 +19,7 @@ func main() {
 	var list = scraper.ReadAthletesListCSV()
 	if list == nil {
 		fmt.Println("Athletes list Csv empty or not found")
-		scraper.CreateHeoresList()
+		scraper.CreateHeoresList(limit)
 	}
 
 	fmt.Println("fin")

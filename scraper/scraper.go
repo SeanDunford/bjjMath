@@ -15,7 +15,7 @@ import (
 	"github.com/gocolly/colly"
 )
 
-const bjjHeroesDomain = "www.bjjheroes.com/"
+const bjjHeroesDomain = "www.bjjheroes.com"
 const outputPath = "./output/"
 const csvOutputPath = outputPath + "csv/"
 const htmlOutputPath = outputPath + "html/"
@@ -24,31 +24,66 @@ const relativeAthletesListLocation = csvOutputPath + "athletesList.csv"
 
 var athletesListLocation string
 
+const relativeUrlMappingLocation = csvOutputPath + "urlMapping.csv"
+
+var urlMappingLocation string
+
 const relativeAthletesHtmlLocation = htmlOutputPath + "athletesList.html"
 
 var athletesHtmlLocation string
 
-const athletesUrl = "https://" + bjjHeroesDomain + "a-z-bjj-fighters-list"
+const athletesUrl = "https://" + bjjHeroesDomain + "/a-z-bjj-fighters-list"
 
-const forceUpdateHtml = true
+const forceUpdateHtml = false
 
-func CreateHeoresList() {
+func CreateHeoresList(limit int) {
 	getAbsoluteFilePaths()
-	var urls [][]string
+	var athletes [][]string
 	if forceUpdateHtml {
 		fmt.Println("Force update athletes list html bc of flag -forceUpdateHtml")
-		urls = scrapeAthletesUrl()
+		athletes = scrapeAthletesUrl(limit)
 	} else if athletesListCached() {
-		urls = scrapeCachedHeroPage()
+		athletes = scrapeCachedHeroPage(limit)
 	} else {
-		urls = scrapeAthletesUrl()
+		athletes = scrapeAthletesUrl(limit)
 	}
 
-	if len(urls) < 2 {
+	urlMapping := resolveAthleteUrls(athletes)
+	writeUrlMappingToCsv(urlMapping)
+
+	if len(athletes) < 2 {
 		log.Fatal("Unable to scrape athletes list")
 	}
 
-	writeAthletesListToCSv(urls)
+	writeAthletesListToCSv(athletes)
+}
+
+func writeUrlMappingToCsv(urlMapping map[string]string) {
+	fmt.Println("Creating urlMapping csv" + urlMappingLocation)
+	csvFile, err := os.OpenFile(urlMappingLocation, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	csvwriter := csv.NewWriter(csvFile)
+	_ = csvwriter.Write([]string{"originalUrl", "resolvedUrl"})
+	for fullUrlPath, resolvedUrl := range(urlMapping)	{
+		_ = csvwriter.Write([]string{fullUrlPath, resolvedUrl})
+	}
+	fmt.Println("Updated athletes list can be found at " + urlMappingLocation)	
+	csvwriter.Flush()
+	csvFile.Close()
+}
+
+func resolveAthleteUrls(athletes [][]string) map[string]string {
+	urlMapping := make(map[string]string)
+	for i, a := range athletes[1:] {
+			fullUrlPath := a[5] // TODO: Replace with key/value mapping or interface
+			resolvedUrl := UrlResolver.ResolveUrl(fullUrlPath)
+			urlMapping[fullUrlPath] = resolvedUrl
+			fmt.Println(strconv.Itoa(i), ") ", resolvedUrl)
+			a[5] = resolvedUrl
+	}
+	return urlMapping
 }
 
 func getAbsoluteFilePaths() {
@@ -61,16 +96,21 @@ func getAbsoluteFilePaths() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	urlMappingLocation, err = filepath.Abs(relativeUrlMappingLocation)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func athletesListCached() bool {
 	if _, err := os.Stat(athletesHtmlLocation); errors.Is(err, os.ErrNotExist) {
 		return false
 	}
+
 	return true
 }
 
-func scrapeCachedHeroPage() [][]string {
+func scrapeCachedHeroPage(limit int) [][]string {
 	t := &http.Transport{}
 	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
 
@@ -83,16 +123,17 @@ func scrapeCachedHeroPage() [][]string {
 
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
+			if (i >= limit) {
+				return
+			}
 			firstName := rowEl.ChildText("td.column-1 > a")
 			lastName := rowEl.ChildText("td.column-2 > a")
 			nickName := rowEl.ChildText("td.column-3 > a")
 			teamName := rowEl.ChildText("td.column-4")
 			urlPath := rowEl.ChildAttrs("td.column-1 > a", "href")
 			fullUrlPath := "https://" + bjjHeroesDomain + urlPath[0]
-			resolvedUrl := UrlResolver.ResolveUrl(fullUrlPath)
-			fmt.Println(resolvedUrl)
 
-			athletesList = append(athletesList, []string{strconv.Itoa(i), firstName, lastName, nickName, teamName, resolvedUrl})
+			athletesList = append(athletesList, []string{strconv.Itoa(i), firstName, lastName, nickName, teamName, fullUrlPath})
 		})
 	})
 
@@ -101,7 +142,7 @@ func scrapeCachedHeroPage() [][]string {
 	return athletesList
 }
 
-func scrapeAthletesUrl() [][]string {
+func scrapeAthletesUrl(limit int) [][]string {
 	c := colly.NewCollector(
 	// colly.AllowedDomains(bjjHeroesDomain),
 	)
@@ -129,16 +170,17 @@ func scrapeAthletesUrl() [][]string {
 
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
+			if (i >= limit) {
+				return
+			}
 			firstName := rowEl.ChildText("td.column-1 > a")
 			lastName := rowEl.ChildText("td.column-2 > a")
 			nickName := rowEl.ChildText("td.column-3 > a")
 			teamName := rowEl.ChildText("td.column-4")
 			urlPath := rowEl.ChildAttrs("td.column-1 > a", "href")
 			fullUrlPath := "https://" + bjjHeroesDomain + urlPath[0]
-			resolvedUrl := UrlResolver.ResolveUrl(fullUrlPath)
-			fmt.Println(resolvedUrl)
 
-			athletesList = append(athletesList, []string{strconv.Itoa(i), firstName, lastName, nickName, teamName, resolvedUrl})
+			athletesList = append(athletesList, []string{strconv.Itoa(i), firstName, lastName, nickName, teamName, fullUrlPath})
 		})
 	})
 	c.Visit(athletesUrl)
