@@ -44,3 +44,6 @@ Currently they are using weird ?p=# url and want the actual resolved urls
 # Gotchas
 ## Add protocol to scraping domain 
 must send `https://www.bjjheroes.com` not just `www...` weirdly it just failed silently would have expected an error. 
+
+## Adding local pacakages 
+must run go mod init after 
