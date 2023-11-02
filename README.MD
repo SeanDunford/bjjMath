@@ -1,3 +1,9 @@
+# How to Run 
+- Clone repo 
+- go mod tidy 
+- mkdir output && mkdir output/html && output/csv
+
+
 # References
 - https://go.dev/doc/faq#git_https
 - 
@@ -8,6 +14,10 @@
 - 
 
 # Future TO-DO 
+
+## Add a compilation phase and build steps 
+- Create output directories 
+- add git version to output maybe
 
 ## How to work out belt rank for edges
 A competitor that beat gordon at purple shouldn't be considered to beat gordon at black belt 

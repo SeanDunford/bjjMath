@@ -160,7 +160,6 @@ func scrapeAthletesUrl() [][]string {
 			athletesList = append(athletesList, []string{strconv.Itoa(i), firstName, lastName, nickName, teamName, resolvedUrl})
 		})
 	})
-	fmt.Println("Visiting " + athletesUrl)
 	c.Visit(athletesUrl)
 
 	return athletesList
