@@ -1,3 +1,6 @@
+# 0.0.3
+Fixed limit, added a case for limit = -1 to use as no limit (make em say uhhhhhh)
+
 # 0.0.2
 Fully resolving urls and storing the mappings and basic athlete info in csv. Added sqllite as a dep but 
 haven't implemented it yet. 

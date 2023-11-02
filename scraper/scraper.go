@@ -123,7 +123,7 @@ func scrapeCachedHeroPage(limit int) [][]string {
 
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			if i > 1 && i >= limit {
+			if limit != -1 && i >= limit {
 				return
 			}
 			firstName := rowEl.ChildText("td.column-1 > a")
@@ -170,7 +170,7 @@ func scrapeAthletesUrl(limit int) [][]string {
 
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			if i > 1 && i >= limit {
+			if limit != -1 && i >= limit {
 				return
 			}
 			firstName := rowEl.ChildText("td.column-1 > a")
