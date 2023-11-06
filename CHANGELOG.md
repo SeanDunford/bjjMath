@@ -1,3 +1,15 @@
+# 0.0.4
+Implemented scraping the athlete page. There's so much code duplication. Don't have a good abstracting/refactoring workflow with Go. There's so much hesitation to break things up becasue the compiler is so loud. 
+I think I need to implement some types so there's less ambiguity in what things are. Now that the basic data types are defined. I'll abstract those as interfaces and replace all the [][]string{} references to something liek []Athlete. and []AthleteRecord. After that i should find a way to persist them to a 
+sqllite db using turso. https://turso.tech/libsql
+Next Steps: 
+  - Create Interfaces for basic data structures like the Athlete and their profile
+  - Implement SQLLite to persist information 
+  - Add some unit tests for the scraper 
+  - Abstract scraper to be more generic 
+  - Abstract csv methods to their own package 
+
+
 # 0.0.3
 Fixed limit, added a case for limit = -1 to use as no limit (make em say uhhhhhh)
 

@@ -19,20 +19,16 @@ const bjjHeroesDomain = "www.bjjheroes.com"
 const outputPath = "./output/"
 const csvOutputPath = outputPath + "csv/"
 const htmlOutputPath = outputPath + "html/"
-
 const relativeAthletesListLocation = csvOutputPath + "athletesList.csv"
-
-var athletesListLocation string
-
 const relativeUrlMappingLocation = csvOutputPath + "urlMapping.csv"
-
-var urlMappingLocation string
-
-const relativeAthletesHtmlLocation = htmlOutputPath + "athletesList.html"
-
-var athletesHtmlLocation string
-
+const relativeAthletesListHtmlLocation = htmlOutputPath + "athletesList.html"
 const athletesUrl = "https://" + bjjHeroesDomain + "/a-z-bjj-fighters-list"
+
+var absoluteHtmlOutputPath string
+var absoluteCsvOutputPath string
+var athletesListLocation string
+var urlMappingLocation string
+var athletesListHtmlLocation string
 
 const forceUpdateHtml = false
 
@@ -61,7 +57,8 @@ func CreateHeoresList(limit int) [][]string {
 
 func writeUrlMappingToCsv(urlMapping map[string]string) {
 	fmt.Println("Creating urlMapping csv" + urlMappingLocation)
-	csvFile, err := os.OpenFile(urlMappingLocation, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// 0644 means we can read and write the file or directory but other users can only read it.
+	csvFile, err := os.OpenFile(urlMappingLocation, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -93,7 +90,7 @@ func getAbsoluteFilePaths() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	athletesHtmlLocation, err = filepath.Abs(relativeAthletesHtmlLocation)
+	athletesListHtmlLocation, err = filepath.Abs(relativeAthletesListHtmlLocation)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -101,10 +98,19 @@ func getAbsoluteFilePaths() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	absoluteHtmlOutputPath, err = filepath.Abs(htmlOutputPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	absoluteCsvOutputPath, err = filepath.Abs(csvOutputPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func athletesListCached() bool {
-	if _, err := os.Stat(athletesHtmlLocation); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(athletesListHtmlLocation); errors.Is(err, os.ErrNotExist) {
 		return false
 	}
 
@@ -138,7 +144,7 @@ func scrapeCachedHeroPage(limit int) [][]string {
 		})
 	})
 
-	c.Visit("file://" + athletesHtmlLocation)
+	c.Visit("file://" + athletesListHtmlLocation)
 
 	return athletesList
 }
@@ -161,12 +167,13 @@ func scrapeAthletesUrl(limit int) [][]string {
 	})
 
 	c.OnResponse(func(r *colly.Response) {
-		err := r.Save(athletesHtmlLocation)
+		err := r.Save(athletesListHtmlLocation)
 		if err != nil {
 			log.Fatal(err)
 		}
 	})
 	athletesList := [][]string{}
+	// Todo: Add escaped name
 	athletesList = append(athletesList, []string{"index", "firstName", "lastName", "nickName", "teamName", "url"})
 
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
@@ -191,7 +198,8 @@ func scrapeAthletesUrl(limit int) [][]string {
 
 func writeAthletesListToCSv(list [][]string) {
 	fmt.Println("Creating athletes list csv" + athletesListLocation)
-	csvFile, err := os.OpenFile(athletesListLocation, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// 0644 means we can read and write the file or directory but other users can only read it.
+	csvFile, err := os.OpenFile(athletesListLocation, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -203,4 +211,23 @@ func writeAthletesListToCSv(list [][]string) {
 	csvFile.Close()
 
 	fmt.Println("Updated athletes list can be found at " + athletesListLocation)
+}
+
+func ReadAthletesListCSV() [][]string {
+	getAbsoluteFilePaths()
+	file, err := os.Open(athletesListLocation)
+	if err != nil {
+		return nil
+	}
+	reader := csv.NewReader(file)
+	// TODO: This is broken and not reading my csv input correctly
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(records) < 1 {
+		return nil
+	}
+	defer file.Close()
+	return records
 }

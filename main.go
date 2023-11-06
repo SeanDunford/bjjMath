@@ -22,5 +22,18 @@ func main() {
 		list = scraper.CreateHeoresList(limit)
 	}
 
+	for _, row := range list[1:] {
+		url := row[5]
+		escapedName := scraper.ParseEscapedNameFromUrl(url)
+
+		var athleteRecord = scraper.ReadAthleteRecordAsCsvByEscapedName(escapedName)
+		if athleteRecord == nil || len(athleteRecord) < 2 {
+			fmt.Println("Record for" + escapedName + "not found or empty scraping athlete page")
+			list = scraper.CreateAthleteRecord(escapedName, url)
+			fmt.Println("Created athlete record for " + escapedName)
+			fmt.Println(list)
+		}
+	}
+
 	fmt.Println("fin")
 }
