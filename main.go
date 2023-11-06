@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/SeanDunford/bjjMath/db"
 	"github.com/SeanDunford/bjjMath/scraper"
 )
 
@@ -17,6 +18,8 @@ const forceUpateTexOnly = true
 
 func main() {
 	fmt.Println("go")
+
+	db.ConnectToDb()
 
 	if forceUpateTexOnly {
 		const escapedName = "aaron-johnson"

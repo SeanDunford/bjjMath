@@ -73,22 +73,18 @@ func athletesListCached() bool {
 	return true
 }
 
-func processAthleteListTableChild(i int, rowEl *colly.HTMLElement, athletesList []Athlete) []Athlete {
-	return append(athletesList, *athleteFromTableRow(i, rowEl))
-}
-
 func scrapeCachedHeroPage(limit int) []Athlete {
 	const parentSelector = "tbody.row-hover"
 	const childSelector = "tr"
 
 	athletesList := []Athlete{}
 
-	ScrapeCachedPageProcessChildrenOfTag(
-		athletesListHtmlLocation,
-		parentSelector,
-		childSelector,
-		processAthleteListTableChild,
-	)
+	// ScrapeCachedPageProcessChildrenOfTag(
+	// 	athletesListHtmlLocation,
+	// 	parentSelector,
+	// 	childSelector,
+	// 	processAthleteListTableChild,
+	// )
 
 	return athletesList
 }

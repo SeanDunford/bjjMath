@@ -53,6 +53,7 @@ func getAbsoluteFilePaths() {
 
 type parseable interface {
 	[]Athlete | AthleteRecord
+	processAthleteListTableChild()
 }
 
 func ScrapeCachedPageProcessChildrenOfTag[T parseable](
@@ -71,7 +72,7 @@ func ScrapeCachedPageProcessChildrenOfTag[T parseable](
 	result := make([]T, 0)
 	c.OnHTML(parentSelector, func(e *colly.HTMLElement) {
 		e.ForEach(childSelector, func(i int, rowEl *colly.HTMLElement) {
-			result = append(result, callback(i, rowEl, result))
+			// result = append(result, callback(i, rowEl, result))
 		})
 	})
 

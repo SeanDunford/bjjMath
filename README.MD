@@ -13,6 +13,11 @@
 - http://go-colly.org/docs/introduction/install/
 - 
 
+## LibSQL 
+https://github.com/tursodatabase/libsql/blob/main/libsql-server/docs/BUILD-RUN.md
+
+Instructions for mac install were buried bc they changed repos 
+
 # Future TO-DO 
 
 ## Beth stack for web site
