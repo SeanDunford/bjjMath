@@ -36,7 +36,7 @@ const athletesUrl = "https://" + bjjHeroesDomain + "/a-z-bjj-fighters-list"
 
 const forceUpdateHtml = false
 
-func CreateHeoresList(limit int) {
+func CreateHeoresList(limit int) [][]string {
 	getAbsoluteFilePaths()
 	var athletes [][]string
 	if forceUpdateHtml {
@@ -56,6 +56,7 @@ func CreateHeoresList(limit int) {
 	}
 
 	writeAthletesListToCSv(athletes)
+	return athletes
 }
 
 func writeUrlMappingToCsv(urlMapping map[string]string) {

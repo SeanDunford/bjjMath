@@ -2,6 +2,8 @@ package scraper
 
 import (
 	"encoding/csv"
+	"fmt"
+
 	// "errors"
 	// "fmt"
 	"log"
@@ -9,27 +11,44 @@ import (
 
 	"os"
 	// "path/filepath"
-	// "strconv"
+
 	// UrlResolver "github.com/SeanDunford/bjjMath/urlResolver"
-	// "github.com/gocolly/colly"
+	"github.com/gocolly/colly"
 )
 
-// const bjjHeroesDomain = "www.bjjheroes.com/"
-// const outputPath = "./output/"
-// const csvOutputPath = outputPath + "csv/"
-// const htmlOutputPath = outputPath + "html/"
+func scrapeAthletesPage(athleteUrl string) {
+	c := colly.NewCollector(
+		colly.AllowedDomains(bjjHeroesDomain),
+	)
 
-// const relativeAthletesListLocation = csvOutputPath + "athletesList.csv"
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting", r.URL)
+	})
 
-// var athletesListLocation string
+	c.OnError(func(_ *colly.Response, err error) {
+		log.Println("Something went wrong:", err)
+	})
 
-// const relativeAthletesHtmlLocation = htmlOutputPath + "athletesList.html"
+	c.OnScraped(func(r *colly.Response) {
+		fmt.Println("Finished", r.Request.URL)
+	})
 
-// var athletesHtmlLocation string
+	c.OnResponse(func(r *colly.Response) {
+		err := r.Save(athletesHtmlLocation)
+		if err != nil {
+			log.Fatal(err)
+		}
+	})
 
-// const athletesUrl = "https://" + bjjHeroesDomain + "a-z-bjj-fighters-list"
+	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
+		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
+			Opponent	W/L	Method	Competition	Weight	Stage	Year
+		})
+	})
+	c.Visit(athleteUrl)
 
-// const forceUpdateHtml = true
+	return athletesList
+}
 
 func ReadAthletesListCSV() [][]string {
 	getAbsoluteFilePaths()

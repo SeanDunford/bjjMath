@@ -15,6 +15,14 @@
 
 # Future TO-DO 
 
+## Beth stack for web site
+- https://www.youtube.com/watch?v=cpzowDDJj24&t=0s
+
+## Turso 
+https://turso.tech/
+Managed SQlLite as libSQL 
+seems promising way to add db to app very quickly with flat file local dev and generous free tier 
+
 ## Add a compilation phase and build steps 
 - Create output directories 
 - add git version to output maybe
@@ -86,3 +94,12 @@ I'd like to just have
 
  Go community pretty opinionated and have a standard
  https://github.com/golang-standards/project-layout
+
+ ## Bad url 
+ Sheliah	Lindsey		Magness BJJ
+ has original url: https://www.bjjheroes.com/?p=13193
+ which redirects to: https://www.bjjheroes.com/wp-content/uploads/2023/01/CarlosHenrique.jpg
+
+it should be: https://www.bjjheroes.com/bjj-fighters/sheliah-lindsey
+
+

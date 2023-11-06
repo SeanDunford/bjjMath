@@ -19,7 +19,7 @@ func main() {
 	var list = scraper.ReadAthletesListCSV()
 	if list == nil {
 		fmt.Println("Athletes list Csv empty or not found")
-		scraper.CreateHeoresList(limit)
+		list = scraper.CreateHeoresList(limit)
 	}
 
 	fmt.Println("fin")
