@@ -19,7 +19,7 @@ import (
 	"github.com/gocolly/colly"
 )
 
-func ScrapeCachedAthletePage(fileLocation string) [][]string {
+func ScrapeCachedAthletePage(fileLocation string) []Athlete {
 	t := &http.Transport{}
 	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
 
@@ -38,7 +38,7 @@ func ScrapeCachedAthletePage(fileLocation string) [][]string {
 		fmt.Println("Finished", r.Request.URL)
 	})
 
-	athletesList := [][]string{}
+	athletesList := []Athlete{}
 	athletesList = append(athletesList, []string{
 		"SortId",
 		"Opponent",
@@ -85,7 +85,7 @@ func ScrapeCachedAthletePage(fileLocation string) [][]string {
 	return athletesList
 }
 
-func ScrapeAthletesPage(athleteUrl string) [][]string {
+func ScrapeAthletesPage(athleteUrl string) []Athlete {
 	c := colly.NewCollector(
 		colly.AllowedDomains(bjjHeroesDomain),
 	)
@@ -110,7 +110,7 @@ func ScrapeAthletesPage(athleteUrl string) [][]string {
 		}
 	})
 
-	athletesList := [][]string{}
+	athletesList := []Athlete{}
 	athletesList = append(athletesList, []string{
 		"SortId",
 		"Opponent",
@@ -183,9 +183,9 @@ func athleteRecordCached(escapedName string) bool {
 	return true
 }
 
-func CreateAthleteRecord(escapedName string, athleteProfileUrl string) [][]string {
+func CreateAthleteRecord(escapedName string, athleteProfileUrl string) []Athlete {
 	getAbsoluteFilePaths()
-	var record [][]string
+	var record []Athlete
 	if athleteRecordCached(escapedName) {
 		htmlLocation := AthletesHtmlLocationFromEscapedName(escapedName)
 		record = ScrapeCachedAthletePage(htmlLocation)
@@ -201,7 +201,7 @@ func CreateAthleteRecord(escapedName string, athleteProfileUrl string) [][]strin
 	return record
 }
 
-func writeAthletesRecordToCSv(escapedName string, record [][]string) {
+func writeAthletesRecordToCSv(escapedName string, record []Athlete) {
 	athletesRecordLocation := absoluteCsvOutputPath + "/" + escapedName + ".csv"
 	fmt.Println("Creating athletes record as csv" + athletesRecordLocation)
 
@@ -220,7 +220,7 @@ func writeAthletesRecordToCSv(escapedName string, record [][]string) {
 	fmt.Println("Updated athletes list can be found at " + athletesRecordLocation)
 }
 
-func ReadAthleteRecordAsCsvByEscapedName(athleteName string) [][]string {
+func ReadAthleteRecordAsCsvByEscapedName(athleteName string) []Athlete {
 	getAbsoluteFilePaths()
 	athleteRecordLocation := absoluteCsvOutputPath + "/" + athleteName + ".csv"
 	file, err := os.Open(athleteRecordLocation)

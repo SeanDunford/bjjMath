@@ -32,9 +32,18 @@ var athletesListHtmlLocation string
 
 const forceUpdateHtml = false
 
-func CreateHeoresList(limit int) [][]string {
+type Athlete struct {
+	index     string
+	firstName string
+	lastName  string
+	nickName  string
+	teamName  string
+	url       string
+}
+
+func CreateHeoresList(limit int) []Athlete {
 	getAbsoluteFilePaths()
-	var athletes [][]string
+	var athletes []Athlete
 	if forceUpdateHtml {
 		fmt.Println("Force update athletes list html bc of flag -forceUpdateHtml")
 		athletes = scrapeAthletesUrl(limit)
@@ -72,7 +81,7 @@ func writeUrlMappingToCsv(urlMapping map[string]string) {
 	csvFile.Close()
 }
 
-func resolveAthleteUrls(athletes [][]string) map[string]string {
+func resolveAthleteUrls(athletes []Athlete) map[string]string {
 	urlMapping := make(map[string]string)
 	for i, a := range athletes[1:] {
 		fullUrlPath := a[5] // TODO: Replace with key/value mapping or interface
@@ -117,14 +126,14 @@ func athletesListCached() bool {
 	return true
 }
 
-func scrapeCachedHeroPage(limit int) [][]string {
+func scrapeCachedHeroPage(limit int) []Athlete {
 	t := &http.Transport{}
 	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
 
 	c := colly.NewCollector()
 	c.WithTransport(t)
 
-	athletesList := [][]string{}
+	athletesList := []Athlete{}
 	// TODO: Convert this to a type
 	athletesList = append(athletesList, []string{"index", "firstName", "lastName", "nickName", "teamName", "url"})
 
@@ -149,7 +158,7 @@ func scrapeCachedHeroPage(limit int) [][]string {
 	return athletesList
 }
 
-func scrapeAthletesUrl(limit int) [][]string {
+func scrapeAthletesUrl(limit int) []Athlete {
 	c := colly.NewCollector(
 	// colly.AllowedDomains(bjjHeroesDomain),
 	)
@@ -172,9 +181,7 @@ func scrapeAthletesUrl(limit int) [][]string {
 			log.Fatal(err)
 		}
 	})
-	athletesList := [][]string{}
-	// Todo: Add escaped name
-	athletesList = append(athletesList, []string{"index", "firstName", "lastName", "nickName", "teamName", "url"})
+	athletesList := []Athlete{}
 
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
@@ -188,7 +195,14 @@ func scrapeAthletesUrl(limit int) [][]string {
 			urlPath := rowEl.ChildAttrs("td.column-1 > a", "href")
 			fullUrlPath := "https://" + bjjHeroesDomain + urlPath[0]
 
-			athletesList = append(athletesList, []string{strconv.Itoa(i), firstName, lastName, nickName, teamName, fullUrlPath})
+			athletesList = append(athletesList, Athlete{
+				index:     strconv.Itoa(i),
+				firstName: firstName,
+				lastName:  lastName,
+				nickName:  nickName,
+				teamName:  teamName,
+				url:       fullUrlPath,
+			})
 		})
 	})
 	c.Visit(athletesUrl)
@@ -196,7 +210,7 @@ func scrapeAthletesUrl(limit int) [][]string {
 	return athletesList
 }
 
-func writeAthletesListToCSv(list [][]string) {
+func writeAthletesListToCSv(list []Athlete) {
 	fmt.Println("Creating athletes list csv" + athletesListLocation)
 	// 0644 means we can read and write the file or directory but other users can only read it.
 	csvFile, err := os.OpenFile(athletesListLocation, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
@@ -213,7 +227,7 @@ func writeAthletesListToCSv(list [][]string) {
 	fmt.Println("Updated athletes list can be found at " + athletesListLocation)
 }
 
-func ReadAthletesListCSV() [][]string {
+func ReadAthletesListCSV() []Athlete {
 	getAbsoluteFilePaths()
 	file, err := os.Open(athletesListLocation)
 	if err != nil {
