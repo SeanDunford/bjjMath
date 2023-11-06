@@ -32,13 +32,44 @@ var athletesListHtmlLocation string
 
 const forceUpdateHtml = false
 
+var AthleteKeys = []string{ // How to make const?
+	"index",
+	"firstName",
+	"lastName",
+	"nickName",
+	"teamName",
+	"url",
+}
+
 type Athlete struct {
-	index     string
-	firstName string
-	lastName  string
-	nickName  string
-	teamName  string
-	url       string
+	Index     string
+	FirstName string
+	LastName  string
+	NickName  string
+	TeamName  string
+	Url       string
+}
+
+func NewAthleteFromCsvRow(csvRow []string) *Athlete {
+	return &Athlete{
+		Index:     csvRow[0],
+		FirstName: csvRow[1],
+		LastName:  csvRow[2],
+		NickName:  csvRow[3],
+		TeamName:  csvRow[4],
+		Url:       csvRow[5],
+	}
+}
+
+func (a Athlete) toCsvRow() []string {
+	return []string{
+		a.Index,
+		a.FirstName,
+		a.LastName,
+		a.NickName,
+		a.TeamName,
+		a.Url,
+	}
 }
 
 func CreateHeoresList(limit int) []Athlete {
@@ -84,11 +115,11 @@ func writeUrlMappingToCsv(urlMapping map[string]string) {
 func resolveAthleteUrls(athletes []Athlete) map[string]string {
 	urlMapping := make(map[string]string)
 	for i, a := range athletes[1:] {
-		fullUrlPath := a[5] // TODO: Replace with key/value mapping or interface
+		fullUrlPath := a.Url
 		resolvedUrl := UrlResolver.ResolveUrl(fullUrlPath)
 		urlMapping[fullUrlPath] = resolvedUrl
 		fmt.Println(strconv.Itoa(i), ") ", resolvedUrl)
-		a[5] = resolvedUrl
+		a.Url = resolvedUrl
 	}
 	return urlMapping
 }
@@ -134,9 +165,6 @@ func scrapeCachedHeroPage(limit int) []Athlete {
 	c.WithTransport(t)
 
 	athletesList := []Athlete{}
-	// TODO: Convert this to a type
-	athletesList = append(athletesList, []string{"index", "firstName", "lastName", "nickName", "teamName", "url"})
-
 	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
 			if limit != -1 && i >= limit {
@@ -149,7 +177,15 @@ func scrapeCachedHeroPage(limit int) []Athlete {
 			urlPath := rowEl.ChildAttrs("td.column-1 > a", "href")
 			fullUrlPath := "https://" + bjjHeroesDomain + urlPath[0]
 
-			athletesList = append(athletesList, []string{strconv.Itoa(i), firstName, lastName, nickName, teamName, fullUrlPath})
+			a := Athlete{
+				Index:     strconv.Itoa(i),
+				FirstName: firstName,
+				LastName:  lastName,
+				NickName:  nickName,
+				TeamName:  teamName,
+				Url:       fullUrlPath,
+			}
+			athletesList = append(athletesList, a)
 		})
 	})
 
@@ -196,12 +232,12 @@ func scrapeAthletesUrl(limit int) []Athlete {
 			fullUrlPath := "https://" + bjjHeroesDomain + urlPath[0]
 
 			athletesList = append(athletesList, Athlete{
-				index:     strconv.Itoa(i),
-				firstName: firstName,
-				lastName:  lastName,
-				nickName:  nickName,
-				teamName:  teamName,
-				url:       fullUrlPath,
+				Index:     strconv.Itoa(i),
+				FirstName: firstName,
+				LastName:  lastName,
+				NickName:  nickName,
+				TeamName:  teamName,
+				Url:       fullUrlPath,
 			})
 		})
 	})
@@ -218,8 +254,10 @@ func writeAthletesListToCSv(list []Athlete) {
 		log.Fatalf("failed creating file: %s", err)
 	}
 	csvwriter := csv.NewWriter(csvFile)
+	csvwriter.Write(AthleteKeys)
 	for _, listItem := range list {
-		_ = csvwriter.Write(listItem)
+		row := listItem.toCsvRow()
+		_ = csvwriter.Write(row)
 	}
 	csvwriter.Flush()
 	csvFile.Close()
@@ -242,6 +280,11 @@ func ReadAthletesListCSV() []Athlete {
 	if len(records) < 1 {
 		return nil
 	}
+	athletes := []Athlete{}
+	for _, row := range records[1:] {
+		athlete := NewAthleteFromCsvRow(row)
+		athletes = append(athletes, *athlete)
+	}
 	defer file.Close()
-	return records
+	return athletes
 }

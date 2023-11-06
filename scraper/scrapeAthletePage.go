@@ -19,7 +19,65 @@ import (
 	"github.com/gocolly/colly"
 )
 
-func ScrapeCachedAthletePage(fileLocation string) []Athlete {
+var MatchKeys = []string{
+	"sortId",
+	"opponent",
+	"opponentLink",
+	"W/L",
+	"method",
+	"methodLink",
+	"competition",
+	"weight",
+	"stage",
+	"year",
+}
+
+type Match struct {
+	SortId       string
+	Opponent     string
+	OpponentLink string
+	winLoss      string
+	Method       string
+	MethodLink   string
+	Competition  string
+	Weight       string
+	Stage        string
+	Year         string
+}
+
+type AthleteRecord []Match
+
+func NewMatchFromCsvRow(csvRow []string) *Match {
+	return &Match{
+		SortId:       csvRow[0],
+		Opponent:     csvRow[1],
+		OpponentLink: csvRow[2],
+		winLoss:      csvRow[3],
+		Method:       csvRow[4],
+		MethodLink:   csvRow[5],
+		Competition:  csvRow[6],
+		Weight:       csvRow[7],
+		Stage:        csvRow[8],
+		Year:         csvRow[9],
+	}
+}
+
+func (m Match) toCsvRow() []string {
+	return []string{
+		m.SortId,
+		m.Opponent,
+		m.OpponentLink,
+		m.winLoss,
+		m.Method,
+		m.MethodLink,
+		m.Competition,
+		m.Weight,
+		m.Stage,
+		m.Year,
+	}
+}
+
+func ScrapeCachedAthletePage(fileLocation string) AthleteRecord {
 	t := &http.Transport{}
 	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
 
@@ -38,19 +96,7 @@ func ScrapeCachedAthletePage(fileLocation string) []Athlete {
 		fmt.Println("Finished", r.Request.URL)
 	})
 
-	athletesList := []Athlete{}
-	athletesList = append(athletesList, []string{
-		"SortId",
-		"Opponent",
-		"OpponentLink",
-		"W/L",
-		"Method",
-		"MethodLink",
-		"Competition",
-		"Weight",
-		"Stage",
-		"Year",
-	})
+	record := AthleteRecord{}
 
 	c.OnHTML("tbody", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
@@ -65,27 +111,29 @@ func ScrapeCachedAthletePage(fileLocation string) []Athlete {
 			stageText := rowEl.ChildText("td:nth-child(7)")
 			yearText := rowEl.ChildText("td:nth-child(8)")
 
-			athletesList = append(athletesList, []string{
-				sortText,
-				opponentText,
-				oponentLink,
-				wlText,
-				methodText,
-				methodLink,
-				competitionText,
-				weightText,
-				stageText,
-				yearText,
-			})
+			match := Match{
+				SortId:       sortText,
+				Opponent:     opponentText,
+				OpponentLink: oponentLink,
+				winLoss:      wlText,
+				Method:       methodText,
+				MethodLink:   methodLink,
+				Competition:  competitionText,
+				Weight:       weightText,
+				Stage:        stageText,
+				Year:         yearText,
+			}
+
+			record = append(record, match)
 		})
 	})
 
 	c.Visit("file://" + fileLocation)
 
-	return athletesList
+	return record
 }
 
-func ScrapeAthletesPage(athleteUrl string) []Athlete {
+func ScrapeAthletesPage(athleteUrl string) AthleteRecord {
 	c := colly.NewCollector(
 		colly.AllowedDomains(bjjHeroesDomain),
 	)
@@ -110,19 +158,7 @@ func ScrapeAthletesPage(athleteUrl string) []Athlete {
 		}
 	})
 
-	athletesList := []Athlete{}
-	athletesList = append(athletesList, []string{
-		"SortId",
-		"Opponent",
-		"OpponentLink",
-		"W/L",
-		"Method",
-		"MethodLink",
-		"Competition",
-		"Weight",
-		"Stage",
-		"Year",
-	})
+	record := AthleteRecord{}
 
 	c.OnHTML("tbody", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
@@ -137,23 +173,25 @@ func ScrapeAthletesPage(athleteUrl string) []Athlete {
 			stageText := rowEl.ChildText("td:nth-child(7)")
 			yearText := rowEl.ChildText("td:nth-child(8)")
 
-			athletesList = append(athletesList, []string{
-				sortText,
-				opponentText,
-				oponentLink,
-				wlText,
-				methodText,
-				methodLink,
-				competitionText,
-				weightText,
-				stageText,
-				yearText,
-			})
+			match := Match{
+				SortId:       sortText,
+				Opponent:     opponentText,
+				OpponentLink: oponentLink,
+				winLoss:      wlText,
+				Method:       methodText,
+				MethodLink:   methodLink,
+				Competition:  competitionText,
+				Weight:       weightText,
+				Stage:        stageText,
+				Year:         yearText,
+			}
+
+			record = append(record, match)
 		})
 	})
 	c.Visit(athleteUrl)
 
-	return athletesList
+	return record
 }
 
 func ParseEscapedNameFromUrl(athleteUrl string) string {
@@ -183,9 +221,10 @@ func athleteRecordCached(escapedName string) bool {
 	return true
 }
 
-func CreateAthleteRecord(escapedName string, athleteProfileUrl string) []Athlete {
+func CreateAthleteRecord(escapedName string, athleteProfileUrl string) AthleteRecord {
 	getAbsoluteFilePaths()
-	var record []Athlete
+
+	var record AthleteRecord
 	if athleteRecordCached(escapedName) {
 		htmlLocation := AthletesHtmlLocationFromEscapedName(escapedName)
 		record = ScrapeCachedAthletePage(htmlLocation)
@@ -193,15 +232,16 @@ func CreateAthleteRecord(escapedName string, athleteProfileUrl string) []Athlete
 		record = ScrapeAthletesPage(athleteProfileUrl)
 	}
 
-	if len(record) < 1 {
-		log.Fatal("Unable to scrape athletes list")
-	}
+	// TODO: Find a way to detect empty athlete records based on html content against errors
+	// if len(record) < 1 {
+	// 	log.Fatal("Unable to scrape athletes list")
+	// }
 
 	writeAthletesRecordToCSv(escapedName, record)
 	return record
 }
 
-func writeAthletesRecordToCSv(escapedName string, record []Athlete) {
+func writeAthletesRecordToCSv(escapedName string, record AthleteRecord) {
 	athletesRecordLocation := absoluteCsvOutputPath + "/" + escapedName + ".csv"
 	fmt.Println("Creating athletes record as csv" + athletesRecordLocation)
 
@@ -211,8 +251,8 @@ func writeAthletesRecordToCSv(escapedName string, record []Athlete) {
 		log.Fatalf("failed creating file: %s", err)
 	}
 	csvwriter := csv.NewWriter(csvFile)
-	for _, listItem := range record {
-		_ = csvwriter.Write(listItem)
+	for _, match := range record {
+		_ = csvwriter.Write(match.toCsvRow())
 	}
 	csvwriter.Flush()
 	csvFile.Close()
@@ -220,7 +260,7 @@ func writeAthletesRecordToCSv(escapedName string, record []Athlete) {
 	fmt.Println("Updated athletes list can be found at " + athletesRecordLocation)
 }
 
-func ReadAthleteRecordAsCsvByEscapedName(athleteName string) []Athlete {
+func ReadAthleteRecordAsCsvByEscapedName(athleteName string) AthleteRecord {
 	getAbsoluteFilePaths()
 	athleteRecordLocation := absoluteCsvOutputPath + "/" + athleteName + ".csv"
 	file, err := os.Open(athleteRecordLocation)
@@ -229,12 +269,17 @@ func ReadAthleteRecordAsCsvByEscapedName(athleteName string) []Athlete {
 	}
 	reader := csv.NewReader(file)
 	// TODO: This is broken and not reading my csv input correctly
-	records, err := reader.ReadAll()
+	csvItems, err := reader.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
-	if len(records) < 1 {
+	if len(csvItems) < 1 {
 		return nil
+	}
+	records := AthleteRecord{}
+	for _, row := range csvItems {
+		match := NewMatchFromCsvRow(row)
+		records = append(records, *match)
 	}
 	defer file.Close()
 	return records

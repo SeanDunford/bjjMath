@@ -1,3 +1,6 @@
+# 0.0.5
+Implemented basic types for Athlete, Match, Record. The majority of athletes do not have any records on the page. Even People like Caio Terra have a completely empty bjj record which is suprising. Will be interesting to see if i can consume other datasources and start to try and build some type of historical record. Possibly even with crowd sourced submissions and adding other feeds like addcc wikipedia, ibjjf site and what not. De duplicating all of that data will be a problem in itself, but cross that bridge when we get there. 
+
 # 0.0.4
 Implemented scraping the athlete page. There's so much code duplication. Don't have a good abstracting/refactoring workflow with Go. There's so much hesitation to break things up becasue the compiler is so loud. 
 I think I need to implement some types so there's less ambiguity in what things are. Now that the basic data types are defined. I'll abstract those as interfaces and replace all the []Athlete{} references to something liek []Athlete. and []AthleteRecord. After that i should find a way to persist them to a 
