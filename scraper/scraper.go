@@ -1,17 +1,11 @@
 package scraper
 
 import (
-	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
-
-	"os"
 	"path/filepath"
-	"strconv"
 
-	UrlResolver "github.com/SeanDunford/bjjMath/urlResolver"
 	"github.com/gocolly/colly"
 )
 
@@ -31,98 +25,6 @@ var urlMappingLocation string
 var athletesListHtmlLocation string
 
 const forceUpdateHtml = false
-
-var AthleteKeys = []string{ // How to make const?
-	"index",
-	"firstName",
-	"lastName",
-	"nickName",
-	"teamName",
-	"url",
-}
-
-type Athlete struct {
-	Index     string
-	FirstName string
-	LastName  string
-	NickName  string
-	TeamName  string
-	Url       string
-}
-
-func NewAthleteFromCsvRow(csvRow []string) *Athlete {
-	return &Athlete{
-		Index:     csvRow[0],
-		FirstName: csvRow[1],
-		LastName:  csvRow[2],
-		NickName:  csvRow[3],
-		TeamName:  csvRow[4],
-		Url:       csvRow[5],
-	}
-}
-
-func (a Athlete) toCsvRow() []string {
-	return []string{
-		a.Index,
-		a.FirstName,
-		a.LastName,
-		a.NickName,
-		a.TeamName,
-		a.Url,
-	}
-}
-
-func CreateHeoresList(limit int) []Athlete {
-	getAbsoluteFilePaths()
-	var athletes []Athlete
-	if forceUpdateHtml {
-		fmt.Println("Force update athletes list html bc of flag -forceUpdateHtml")
-		athletes = scrapeAthletesUrl(limit)
-	} else if athletesListCached() {
-		athletes = scrapeCachedHeroPage(limit)
-	} else {
-		athletes = scrapeAthletesUrl(limit)
-	}
-
-	urlMapping := resolveAthleteUrls(athletes)
-	writeUrlMappingToCsv(urlMapping)
-
-	if len(athletes) < 2 {
-		log.Fatal("Unable to scrape athletes list")
-	}
-
-	writeAthletesListToCSv(athletes)
-	return athletes
-}
-
-func writeUrlMappingToCsv(urlMapping map[string]string) {
-	fmt.Println("Creating urlMapping csv" + urlMappingLocation)
-	// 0644 means we can read and write the file or directory but other users can only read it.
-	csvFile, err := os.OpenFile(urlMappingLocation, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Fatalf("failed creating file: %s", err)
-	}
-	csvwriter := csv.NewWriter(csvFile)
-	_ = csvwriter.Write([]string{"originalUrl", "resolvedUrl"})
-	for fullUrlPath, resolvedUrl := range urlMapping {
-		_ = csvwriter.Write([]string{fullUrlPath, resolvedUrl})
-	}
-	fmt.Println("Updated athletes list can be found at " + urlMappingLocation)
-	csvwriter.Flush()
-	csvFile.Close()
-}
-
-func resolveAthleteUrls(athletes []Athlete) map[string]string {
-	urlMapping := make(map[string]string)
-	for i, a := range athletes[1:] {
-		fullUrlPath := a.Url
-		resolvedUrl := UrlResolver.ResolveUrl(fullUrlPath)
-		urlMapping[fullUrlPath] = resolvedUrl
-		fmt.Println(strconv.Itoa(i), ") ", resolvedUrl)
-		a.Url = resolvedUrl
-	}
-	return urlMapping
-}
 
 func getAbsoluteFilePaths() {
 	var err error
@@ -149,57 +51,44 @@ func getAbsoluteFilePaths() {
 	}
 }
 
-func athletesListCached() bool {
-	if _, err := os.Stat(athletesListHtmlLocation); errors.Is(err, os.ErrNotExist) {
-		return false
-	}
-
-	return true
+type parseable interface {
+	[]Athlete | AthleteRecord
 }
 
-func scrapeCachedHeroPage(limit int) []Athlete {
+func ScrapeCachedPageProcessChildrenOfTag[T parseable](
+	htmlLocation string,
+	parentSelector string,
+	childSelector string,
+	callback func(int, *colly.HTMLElement, []T) []T,
+) []T {
+
 	t := &http.Transport{}
 	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
 
 	c := colly.NewCollector()
 	c.WithTransport(t)
 
-	athletesList := []Athlete{}
-	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
-		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			if limit != -1 && i >= limit {
-				return
-			}
-			athletesList = append(athletesList, *athleteFromTableRow(i, rowEl))
+	result := make([]T, 0)
+	c.OnHTML(parentSelector, func(e *colly.HTMLElement) {
+		e.ForEach(childSelector, func(i int, rowEl *colly.HTMLElement) {
+			result = append(result, callback(i, rowEl, result))
 		})
 	})
 
 	c.Visit("file://" + athletesListHtmlLocation)
-
-	return athletesList
+	return result
 }
 
-func athleteFromTableRow(i int, rowEl *colly.HTMLElement) *Athlete {
-	firstName := rowEl.ChildText("td.column-1 > a")
-	lastName := rowEl.ChildText("td.column-2 > a")
-	nickName := rowEl.ChildText("td.column-3 > a")
-	teamName := rowEl.ChildText("td.column-4")
-	urlPath := rowEl.ChildAttrs("td.column-1 > a", "href")
-	fullUrlPath := "https://" + bjjHeroesDomain + urlPath[0]
+func ScrapeUrlProcessChildrenOfTag(
+	url string,
+	allowedDomain string,
+	parentSelector string,
+	childSelector string,
+	htmlLocation string,
+	callback func(int, *colly.HTMLElement)) {
 
-	return &Athlete{
-		Index:     strconv.Itoa(i),
-		FirstName: firstName,
-		LastName:  lastName,
-		NickName:  nickName,
-		TeamName:  teamName,
-		Url:       fullUrlPath,
-	}
-}
-
-func scrapeAthletesUrl(limit int) []Athlete {
 	c := colly.NewCollector(
-	// colly.AllowedDomains(bjjHeroesDomain),
+		colly.AllowedDomains(allowedDomain),
 	)
 
 	c.OnRequest(func(r *colly.Request) {
@@ -215,66 +104,15 @@ func scrapeAthletesUrl(limit int) []Athlete {
 	})
 
 	c.OnResponse(func(r *colly.Response) {
-		err := r.Save(athletesListHtmlLocation)
+		err := r.Save(htmlLocation)
 		if err != nil {
 			log.Fatal(err)
 		}
 	})
-	athletesList := []Athlete{}
 
-	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
-		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			if limit != -1 && i >= limit {
-				return
-			}
-
-			athletesList = append(athletesList, *athleteFromTableRow(i, rowEl))
-		})
+	c.OnHTML(parentSelector, func(e *colly.HTMLElement) {
+		e.ForEach(childSelector, callback)
 	})
-	c.Visit(athletesUrl)
+	c.Visit(url)
 
-	return athletesList
-}
-
-func writeAthletesListToCSv(list []Athlete) {
-	fmt.Println("Creating athletes list csv" + athletesListLocation)
-	// 0644 means we can read and write the file or directory but other users can only read it.
-	csvFile, err := os.OpenFile(athletesListLocation, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Fatalf("failed creating file: %s", err)
-	}
-	csvwriter := csv.NewWriter(csvFile)
-	csvwriter.Write(AthleteKeys)
-	for _, listItem := range list {
-		row := listItem.toCsvRow()
-		_ = csvwriter.Write(row)
-	}
-	csvwriter.Flush()
-	csvFile.Close()
-
-	fmt.Println("Updated athletes list can be found at " + athletesListLocation)
-}
-
-func ReadAthletesListCSV() []Athlete {
-	getAbsoluteFilePaths()
-	file, err := os.Open(athletesListLocation)
-	if err != nil {
-		return nil
-	}
-	reader := csv.NewReader(file)
-	// TODO: This is broken and not reading my csv input correctly
-	records, err := reader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(records) < 1 {
-		return nil
-	}
-	athletes := []Athlete{}
-	for _, row := range records[1:] {
-		athlete := NewAthleteFromCsvRow(row)
-		athletes = append(athletes, *athlete)
-	}
-	defer file.Close()
-	return athletes
 }

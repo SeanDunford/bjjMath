@@ -1,4 +1,10 @@
-# 0.0.5
+# 0.0.6 -> NEXT
+- Added a flag to run the scraper for one athelete 
+- Tested all caching and parsing stages to ensure they work as expected 
+- Going to further abstract the scraper so that shared code is reused
+
+
+# 0.0.5 -> CURRENT
 Implemented basic types for Athlete, Match, Record. The majority of athletes do not have any records on the page. Even People like Caio Terra have a completely empty bjj record which is suprising. Will be interesting to see if i can consume other datasources and start to try and build some type of historical record. Possibly even with crowd sourced submissions and adding other feeds like addcc wikipedia, ibjjf site and what not. De duplicating all of that data will be a problem in itself, but cross that bridge when we get there. 
 
 # 0.0.4

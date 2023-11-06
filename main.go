@@ -8,7 +8,7 @@ import (
 
 const forceUpdateAthleteListCsv = false
 const forceUpdateAthleteRecordCsv = false
-const limitOfAthletes = -1
+const LimitOfAthletes = -1
 
 // const limitOfAthleteRecords = -1 TODO: Implement
 const forceUpateTexOnly = true
@@ -34,7 +34,7 @@ func main() {
 	var athletes = scraper.ReadAthletesListCSV()
 	if athletes == nil || len(athletes) < 1 {
 		fmt.Println("Athletes list Csv empty or not found")
-		athletes = scraper.CreateHeoresList(limitOfAthletes)
+		athletes = scraper.CreateHeoresList(LimitOfAthletes)
 	}
 
 	for _, athlete := range athletes {
