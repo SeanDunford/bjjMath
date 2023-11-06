@@ -7,20 +7,34 @@ import (
 )
 
 const forceUpdateAthleteListCsv = false
-const forceUpdateAthleteRecordCsv = true
-const limit = -1
+const forceUpdateAthleteRecordCsv = false
+const limitOfAthletes = -1
+
+// const limitOfAthleteRecords = -1 TODO: Implement
+const forceUpateTexOnly = true
 
 // TODO: Make these flags configurable through binary params and add const forceUpdateHtml = true here
 
 func main() {
 	fmt.Println("go")
+
+	if forceUpateTexOnly {
+		const escapedName = "aaron-johnson"
+		const texUrl = "https://www.bjjheroes.com/bjj-fighters/aaron-johnson"
+		record := scraper.CreateAthleteRecord(escapedName, texUrl)
+		fmt.Println("Created athlete record for " + escapedName)
+		fmt.Println(record)
+		fmt.Println("fin")
+		return
+	}
+
 	if forceUpdateAthleteListCsv {
 		fmt.Println("Force update athletes list csv bc of flag -forceUpdateCsv")
 	}
 	var athletes = scraper.ReadAthletesListCSV()
 	if athletes == nil || len(athletes) < 1 {
 		fmt.Println("Athletes list Csv empty or not found")
-		athletes = scraper.CreateHeoresList(limit)
+		athletes = scraper.CreateHeoresList(limitOfAthletes)
 	}
 
 	for _, athlete := range athletes {

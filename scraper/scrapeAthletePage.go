@@ -77,6 +77,34 @@ func (m Match) toCsvRow() []string {
 	}
 }
 
+func matchFromRecordTableRow(i int, rowEl *colly.HTMLElement) *Match {
+	sortText := rowEl.ChildText("td:nth-child(1)")
+	opponentText := rowEl.ChildText("td:nth-child(2)")
+	oponentLink := rowEl.ChildAttr("td:nth-child(2) > a", "href")
+	wlText := rowEl.ChildText("td:nth-child(3)")
+	methodText := rowEl.ChildText("td:nth-child(4)")
+	methodLink := rowEl.ChildAttr("td:nth-child(4) > a", "href")
+	competitionText := rowEl.ChildText("td:nth-child(5)")
+	weightText := rowEl.ChildText("td:nth-child(6)")
+	stageText := rowEl.ChildText("td:nth-child(7)")
+	yearText := rowEl.ChildText("td:nth-child(8)")
+
+	match := Match{
+		SortId:       sortText,
+		Opponent:     opponentText,
+		OpponentLink: oponentLink,
+		winLoss:      wlText,
+		Method:       methodText,
+		MethodLink:   methodLink,
+		Competition:  competitionText,
+		Weight:       weightText,
+		Stage:        stageText,
+		Year:         yearText,
+	}
+
+	return &match
+}
+
 func ScrapeCachedAthletePage(fileLocation string) AthleteRecord {
 	t := &http.Transport{}
 	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
@@ -100,31 +128,7 @@ func ScrapeCachedAthletePage(fileLocation string) AthleteRecord {
 
 	c.OnHTML("tbody", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			sortText := rowEl.ChildText("td:nth-child(1)")
-			opponentText := rowEl.ChildText("td:nth-child(2)")
-			oponentLink := rowEl.ChildAttr("td:nth-child(2) > a", "href")
-			wlText := rowEl.ChildText("td:nth-child(3)")
-			methodText := rowEl.ChildText("td:nth-child(4)")
-			methodLink := rowEl.ChildAttr("td:nth-child(4) > a", "href")
-			competitionText := rowEl.ChildText("td:nth-child(5)")
-			weightText := rowEl.ChildText("td:nth-child(6)")
-			stageText := rowEl.ChildText("td:nth-child(7)")
-			yearText := rowEl.ChildText("td:nth-child(8)")
-
-			match := Match{
-				SortId:       sortText,
-				Opponent:     opponentText,
-				OpponentLink: oponentLink,
-				winLoss:      wlText,
-				Method:       methodText,
-				MethodLink:   methodLink,
-				Competition:  competitionText,
-				Weight:       weightText,
-				Stage:        stageText,
-				Year:         yearText,
-			}
-
-			record = append(record, match)
+			record = append(record, *matchFromRecordTableRow(i, rowEl))
 		})
 	})
 
@@ -162,31 +166,7 @@ func ScrapeAthletesPage(athleteUrl string) AthleteRecord {
 
 	c.OnHTML("tbody", func(e *colly.HTMLElement) {
 		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			sortText := rowEl.ChildText("td:nth-child(1)")
-			opponentText := rowEl.ChildText("td:nth-child(2)")
-			oponentLink := rowEl.ChildAttr("td:nth-child(2) > a", "href")
-			wlText := rowEl.ChildText("td:nth-child(3)")
-			methodText := rowEl.ChildText("td:nth-child(4)")
-			methodLink := rowEl.ChildAttr("td:nth-child(4) > a", "href")
-			competitionText := rowEl.ChildText("td:nth-child(5)")
-			weightText := rowEl.ChildText("td:nth-child(6)")
-			stageText := rowEl.ChildText("td:nth-child(7)")
-			yearText := rowEl.ChildText("td:nth-child(8)")
-
-			match := Match{
-				SortId:       sortText,
-				Opponent:     opponentText,
-				OpponentLink: oponentLink,
-				winLoss:      wlText,
-				Method:       methodText,
-				MethodLink:   methodLink,
-				Competition:  competitionText,
-				Weight:       weightText,
-				Stage:        stageText,
-				Year:         yearText,
-			}
-
-			record = append(record, match)
+			record = append(record, *matchFromRecordTableRow(i, rowEl))
 		})
 	})
 	c.Visit(athleteUrl)
@@ -212,7 +192,7 @@ func AthletesHtmlLocationFromEscapedName(escapedName string) string {
 	return absoluteHtmlOutputPath + "/" + escapedName + ".html"
 }
 
-func athleteRecordCached(escapedName string) bool {
+func athleteRecordPageCached(escapedName string) bool {
 	athleteRecordLocation := absoluteHtmlOutputPath + "/" + escapedName + ".html"
 	if _, err := os.Stat(athleteRecordLocation); errors.Is(err, os.ErrNotExist) {
 		return false
@@ -221,11 +201,22 @@ func athleteRecordCached(escapedName string) bool {
 	return true
 }
 
+func athleteRecordCached(escapedName string) AthleteRecord {
+	athleteRecordLocation := absoluteCsvOutputPath + "/" + escapedName + ".csv"
+	if _, err := os.Stat(athleteRecordLocation); errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+
+	return ReadAthleteRecordAsCsvByEscapedName(escapedName)
+}
+
 func CreateAthleteRecord(escapedName string, athleteProfileUrl string) AthleteRecord {
 	getAbsoluteFilePaths()
 
-	var record AthleteRecord
-	if athleteRecordCached(escapedName) {
+	var record AthleteRecord = athleteRecordCached(escapedName)
+	if len(record) > 1 {
+		return record
+	} else if athleteRecordPageCached(escapedName) {
 		htmlLocation := AthletesHtmlLocationFromEscapedName(escapedName)
 		record = ScrapeCachedAthletePage(htmlLocation)
 	} else {

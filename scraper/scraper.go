@@ -170,28 +170,31 @@ func scrapeCachedHeroPage(limit int) []Athlete {
 			if limit != -1 && i >= limit {
 				return
 			}
-			firstName := rowEl.ChildText("td.column-1 > a")
-			lastName := rowEl.ChildText("td.column-2 > a")
-			nickName := rowEl.ChildText("td.column-3 > a")
-			teamName := rowEl.ChildText("td.column-4")
-			urlPath := rowEl.ChildAttrs("td.column-1 > a", "href")
-			fullUrlPath := "https://" + bjjHeroesDomain + urlPath[0]
-
-			a := Athlete{
-				Index:     strconv.Itoa(i),
-				FirstName: firstName,
-				LastName:  lastName,
-				NickName:  nickName,
-				TeamName:  teamName,
-				Url:       fullUrlPath,
-			}
-			athletesList = append(athletesList, a)
+			athletesList = append(athletesList, *athleteFromTableRow(i, rowEl))
 		})
 	})
 
 	c.Visit("file://" + athletesListHtmlLocation)
 
 	return athletesList
+}
+
+func athleteFromTableRow(i int, rowEl *colly.HTMLElement) *Athlete {
+	firstName := rowEl.ChildText("td.column-1 > a")
+	lastName := rowEl.ChildText("td.column-2 > a")
+	nickName := rowEl.ChildText("td.column-3 > a")
+	teamName := rowEl.ChildText("td.column-4")
+	urlPath := rowEl.ChildAttrs("td.column-1 > a", "href")
+	fullUrlPath := "https://" + bjjHeroesDomain + urlPath[0]
+
+	return &Athlete{
+		Index:     strconv.Itoa(i),
+		FirstName: firstName,
+		LastName:  lastName,
+		NickName:  nickName,
+		TeamName:  teamName,
+		Url:       fullUrlPath,
+	}
 }
 
 func scrapeAthletesUrl(limit int) []Athlete {
@@ -224,21 +227,8 @@ func scrapeAthletesUrl(limit int) []Athlete {
 			if limit != -1 && i >= limit {
 				return
 			}
-			firstName := rowEl.ChildText("td.column-1 > a")
-			lastName := rowEl.ChildText("td.column-2 > a")
-			nickName := rowEl.ChildText("td.column-3 > a")
-			teamName := rowEl.ChildText("td.column-4")
-			urlPath := rowEl.ChildAttrs("td.column-1 > a", "href")
-			fullUrlPath := "https://" + bjjHeroesDomain + urlPath[0]
 
-			athletesList = append(athletesList, Athlete{
-				Index:     strconv.Itoa(i),
-				FirstName: firstName,
-				LastName:  lastName,
-				NickName:  nickName,
-				TeamName:  teamName,
-				Url:       fullUrlPath,
-			})
+			athletesList = append(athletesList, *athleteFromTableRow(i, rowEl))
 		})
 	})
 	c.Visit(athletesUrl)
