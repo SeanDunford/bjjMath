@@ -6,7 +6,7 @@
 
 # References
 - https://go.dev/doc/faq#git_https
-- 
+- https://github.com/libsql/libsql-client-go/blob/main/examples/sql/counter/main.go
 
 
 # Deps 
