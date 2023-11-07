@@ -47,6 +47,48 @@ func matchFromRecordTableRow(i int, rowEl *colly.HTMLElement) *Match {
 	return &match
 }
 
+func TestScrapeCached(fileLocation string) AthleteRecord {
+	elements := ScrapeCachedAthletePage2(fileLocation)
+	record := AthleteRecord{}
+
+	for i, element := range elements {
+		record = append(record, *matchFromRecordTableRow(i, element))
+	}
+
+	return record
+}
+
+func ScrapeCachedAthletePage2(fileLocation string) []*colly.HTMLElement {
+	t := &http.Transport{}
+	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
+
+	c := colly.NewCollector()
+	c.WithTransport(t)
+
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting", r.URL)
+	})
+
+	c.OnError(func(_ *colly.Response, err error) {
+		log.Println("Something went wrong:", err)
+	})
+
+	c.OnScraped(func(r *colly.Response) {
+		fmt.Println("Finished", r.Request.URL)
+	})
+
+	elements := []*colly.HTMLElement{}
+	c.OnHTML("tbody", func(e *colly.HTMLElement) {
+		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
+			elements = append(elements, rowEl)
+		})
+	})
+
+	c.Visit("file://" + fileLocation)
+
+	return elements
+}
+
 func ScrapeCachedAthletePage(fileLocation string) AthleteRecord {
 	t := &http.Transport{}
 	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
@@ -152,11 +194,17 @@ func athleteRecordCached(escapedName string) AthleteRecord {
 	return ReadAthleteRecordAsCsvByEscapedName(escapedName)
 }
 
-func CreateAthleteRecord(escapedName string, athleteProfileUrl string) AthleteRecord {
+func CreateAthleteRecord(escapedName string, athleteProfileUrl string, force bool) AthleteRecord {
 	getAbsoluteFilePaths()
 
 	var record AthleteRecord = athleteRecordCached(escapedName)
-	if len(record) > 1 {
+	if force {
+		htmlLocation := AthletesHtmlLocationFromEscapedName(escapedName)
+		record = TestScrapeCached(htmlLocation)
+
+		// TODO: replace above with below
+		// record = ScrapeAthletesPage(athleteProfileUrl)
+	} else if len(record) > 1 {
 		return record
 	} else if athleteRecordPageCached(escapedName) {
 		htmlLocation := AthletesHtmlLocationFromEscapedName(escapedName)

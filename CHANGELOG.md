@@ -2,6 +2,9 @@
 - Added a flag to run the scraper for one athelete 
 - Tested all caching and parsing stages to ensure they work as expected 
 - Going to further abstract the scraper so that shared code is reused
+- Added proof of concept for Read/Write/Persist to db
+- Need to figure out these generics can't quite wrap my head around it 
+- 
 
 
 # 0.0.5 -> CURRENT

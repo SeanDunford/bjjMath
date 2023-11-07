@@ -8,7 +8,7 @@ import (
 )
 
 const forceUpdateAthleteListCsv = false
-const forceUpdateAthleteRecordCsv = false
+const forceUpdateAthleteRecordCsv = true
 const LimitOfAthletes = -1
 
 // const limitOfAthleteRecords = -1 TODO: Implement
@@ -24,7 +24,7 @@ func main() {
 	if forceUpateTexOnly {
 		const escapedName = "aaron-johnson"
 		const texUrl = "https://www.bjjheroes.com/bjj-fighters/aaron-johnson"
-		record := scraper.CreateAthleteRecord(escapedName, texUrl)
+		record := scraper.CreateAthleteRecord(escapedName, texUrl, forceUpateTexOnly)
 		fmt.Println("Created athlete record for " + escapedName)
 		fmt.Println(record)
 		fmt.Println("fin")
@@ -46,12 +46,12 @@ func main() {
 		var athleteRecord = scraper.ReadAthleteRecordAsCsvByEscapedName(escapedName)
 		if forceUpdateAthleteRecordCsv {
 			fmt.Println("Force Update flag detected creating csv Record for" + escapedName)
-			record := scraper.CreateAthleteRecord(escapedName, athlete.Url)
+			record := scraper.CreateAthleteRecord(escapedName, athlete.Url, false)
 			fmt.Println("Created athlete record for " + escapedName)
 			fmt.Println(record)
 		} else if athleteRecord == nil || len(athleteRecord) < 2 {
 			fmt.Println("Record for " + escapedName + " not found or empty scraping athlete page")
-			record := scraper.CreateAthleteRecord(escapedName, athlete.Url)
+			record := scraper.CreateAthleteRecord(escapedName, athlete.Url, false)
 			fmt.Println("Created athlete record for " + escapedName)
 			fmt.Println(record)
 		}
