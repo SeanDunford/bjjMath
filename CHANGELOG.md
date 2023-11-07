@@ -1,13 +1,18 @@
-# 0.0.6 -> NEXT
+# 0.0.7 -> Next
+- TODO: Implement DB Models and basic queires 
+- 
+
+# 0.0.6 -> Current
 - Added a flag to run the scraper for one athelete 
 - Tested all caching and parsing stages to ensure they work as expected 
 - Going to further abstract the scraper so that shared code is reused
 - Added proof of concept for Read/Write/Persist to db
 - Need to figure out these generics can't quite wrap my head around it 
-- 
+- Figured out a workaround for the generic types: 
+  I'm just returning the raw row elements. That way i can process them outside of the context of the scraper. This isn't ideal because i have to loop over the elements again but it's fine for now. Will come back to this when i'm more comfortable with go. 
 
 
-# 0.0.5 -> CURRENT
+# 0.0.5
 Implemented basic types for Athlete, Match, Record. The majority of athletes do not have any records on the page. Even People like Caio Terra have a completely empty bjj record which is suprising. Will be interesting to see if i can consume other datasources and start to try and build some type of historical record. Possibly even with crowd sourced submissions and adding other feeds like addcc wikipedia, ibjjf site and what not. De duplicating all of that data will be a problem in itself, but cross that bridge when we get there. 
 
 # 0.0.4

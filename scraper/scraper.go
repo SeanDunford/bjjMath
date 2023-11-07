@@ -17,6 +17,8 @@ const relativeAthletesListLocation = csvOutputPath + "athletesList.csv"
 const relativeUrlMappingLocation = csvOutputPath + "urlMapping.csv"
 const relativeAthletesListHtmlLocation = htmlOutputPath + "athletesList.html"
 const athletesUrl = "https://" + bjjHeroesDomain + "/a-z-bjj-fighters-list"
+const parentSelector = "tbody"
+const childSelector = "tr"
 
 var absoluteHtmlOutputPath string
 var absoluteCsvOutputPath string
@@ -51,17 +53,13 @@ func getAbsoluteFilePaths() {
 	}
 }
 
-type parseable interface {
-	[]Athlete | AthleteRecord
-	processAthleteListTableChild()
-}
-
-func ScrapeCachedPageProcessChildrenOfTag[T parseable](
+func ScrapeCachedPageProcessChildrenOfTag(
 	htmlLocation string,
 	parentSelector string,
 	childSelector string,
-	callback func(int, *colly.HTMLElement, []T) []T,
-) []T {
+) []*colly.HTMLElement {
+	// TODO: return []*colly.HTMLElement is ineficient and should have a callback
+	// Unsure on how to create generic interfaces for that
 
 	t := &http.Transport{}
 	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
@@ -69,10 +67,10 @@ func ScrapeCachedPageProcessChildrenOfTag[T parseable](
 	c := colly.NewCollector()
 	c.WithTransport(t)
 
-	result := make([]T, 0)
+	result := []*colly.HTMLElement{}
 	c.OnHTML(parentSelector, func(e *colly.HTMLElement) {
 		e.ForEach(childSelector, func(i int, rowEl *colly.HTMLElement) {
-			// result = append(result, callback(i, rowEl, result))
+			result = append(result, rowEl)
 		})
 	})
 
@@ -86,7 +84,10 @@ func ScrapeUrlProcessChildrenOfTag(
 	parentSelector string,
 	childSelector string,
 	htmlLocation string,
-	callback func(int, *colly.HTMLElement)) {
+	) []*colly.HTMLElement {
+	// TODO: return []*colly.HTMLElement is ineficient and should have a callback
+	// Unsure on how to type that
+
 
 	c := colly.NewCollector(
 		colly.AllowedDomains(allowedDomain),
@@ -111,9 +112,12 @@ func ScrapeUrlProcessChildrenOfTag(
 		}
 	})
 
+	result := []*colly.HTMLElement{}
 	c.OnHTML(parentSelector, func(e *colly.HTMLElement) {
-		e.ForEach(childSelector, callback)
+		e.ForEach(childSelector, func(i int, rowEl *colly.HTMLElement) {
+			result = append(result, rowEl)
+		})
 	})
 	c.Visit(url)
-
+	return result
 }

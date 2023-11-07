@@ -1,7 +1,5 @@
 package scraper
 
-import "github.com/gocolly/colly"
-
 var AthleteKeys = []string{ // How to make const?
 	"index",
 	"firstName",
@@ -40,8 +38,4 @@ func NewAthleteFromCsvRow(csvRow []string) *Athlete {
 		TeamName:  csvRow[4],
 		Url:       csvRow[5],
 	}
-}
-
-func (a Athlete) processAthleteListTableChild(i int, rowEl *colly.HTMLElement, athletesList []Athlete) []Athlete {
-	return append(athletesList, *athleteFromTableRow(i, rowEl))
 }

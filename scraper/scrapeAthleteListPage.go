@@ -74,17 +74,20 @@ func athletesListCached() bool {
 }
 
 func scrapeCachedHeroPage(limit int) []Athlete {
-	const parentSelector = "tbody.row-hover"
-	const childSelector = "tr"
-
 	athletesList := []Athlete{}
 
-	// ScrapeCachedPageProcessChildrenOfTag(
-	// 	athletesListHtmlLocation,
-	// 	parentSelector,
-	// 	childSelector,
-	// 	processAthleteListTableChild,
-	// )
+	elements := ScrapeCachedPageProcessChildrenOfTag(
+		athletesListHtmlLocation,
+		"tbody.row-hover",
+		childSelector,
+	)
+
+	for i, el := range elements{
+		if (i > limit) {
+			break
+		}
+		athletesList = append(athletesList, *athleteFromTableRow(i, el))
+	}
 
 	return athletesList
 }
@@ -108,40 +111,23 @@ func athleteFromTableRow(i int, rowEl *colly.HTMLElement) *Athlete {
 }
 
 func scrapeAthletesUrl(limit int) []Athlete {
-	c := colly.NewCollector(
-	// colly.AllowedDomains(bjjHeroesDomain),
+
+	elements := ScrapeUrlProcessChildrenOfTag(
+		athletesUrl,
+		bjjHeroesDomain,
+		"tbody.row-hover",
+		childSelector,
+		athletesListHtmlLocation,
 	)
 
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
-	})
-
-	c.OnError(func(_ *colly.Response, err error) {
-		log.Println("Something went wrong:", err)
-	})
-
-	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished", r.Request.URL)
-	})
-
-	c.OnResponse(func(r *colly.Response) {
-		err := r.Save(athletesListHtmlLocation)
-		if err != nil {
-			log.Fatal(err)
-		}
-	})
 	athletesList := []Athlete{}
+	for i, el := range elements {
+		if limit != -1 && i >= limit {
+			return athletesList
+		}
 
-	c.OnHTML("tbody.row-hover", func(e *colly.HTMLElement) {
-		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			if limit != -1 && i >= limit {
-				return
-			}
-
-			athletesList = append(athletesList, *athleteFromTableRow(i, rowEl))
-		})
-	})
-	c.Visit(athletesUrl)
+		athletesList = append(athletesList, *athleteFromTableRow(i, el))
+	}
 
 	return athletesList
 }

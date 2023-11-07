@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 
@@ -47,113 +46,36 @@ func matchFromRecordTableRow(i int, rowEl *colly.HTMLElement) *Match {
 	return &match
 }
 
-func TestScrapeCached(fileLocation string) AthleteRecord {
-	elements := ScrapeCachedAthletePage2(fileLocation)
-	record := AthleteRecord{}
+func ScrapeCachedAthletePage(fileLocation string) AthleteRecord {
+	htmlLocation := "file://" + fileLocation
 
-	for i, element := range elements {
-		record = append(record, *matchFromRecordTableRow(i, element))
+	elements := ScrapeCachedPageProcessChildrenOfTag(
+		htmlLocation,
+		parentSelector,
+		childSelector,
+	)
+
+	record := AthleteRecord{}
+	for i, el := range elements {
+		record = append(record, *matchFromRecordTableRow(i, el))
 	}
 
 	return record
 }
 
-func ScrapeCachedAthletePage2(fileLocation string) []*colly.HTMLElement {
-	t := &http.Transport{}
-	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
-
-	c := colly.NewCollector()
-	c.WithTransport(t)
-
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
-	})
-
-	c.OnError(func(_ *colly.Response, err error) {
-		log.Println("Something went wrong:", err)
-	})
-
-	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished", r.Request.URL)
-	})
-
-	elements := []*colly.HTMLElement{}
-	c.OnHTML("tbody", func(e *colly.HTMLElement) {
-		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			elements = append(elements, rowEl)
-		})
-	})
-
-	c.Visit("file://" + fileLocation)
-
-	return elements
-}
-
-func ScrapeCachedAthletePage(fileLocation string) AthleteRecord {
-	t := &http.Transport{}
-	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
-
-	c := colly.NewCollector()
-	c.WithTransport(t)
-
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
-	})
-
-	c.OnError(func(_ *colly.Response, err error) {
-		log.Println("Something went wrong:", err)
-	})
-
-	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished", r.Request.URL)
-	})
-
-	record := AthleteRecord{}
-
-	c.OnHTML("tbody", func(e *colly.HTMLElement) {
-		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			record = append(record, *matchFromRecordTableRow(i, rowEl))
-		})
-	})
-
-	c.Visit("file://" + fileLocation)
-
-	return record
-}
-
 func ScrapeAthletesPage(athleteUrl string) AthleteRecord {
-	c := colly.NewCollector(
-		colly.AllowedDomains(bjjHeroesDomain),
+	elements := ScrapeUrlProcessChildrenOfTag(
+		athleteUrl,
+		AthletesHtmlLocationFromUrl(athleteUrl),
+		bjjHeroesDomain,
+		parentSelector,
+		childSelector,
 	)
 
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
-	})
-
-	c.OnError(func(_ *colly.Response, err error) {
-		log.Println("Something went wrong:", err)
-	})
-
-	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished", r.Request.URL)
-	})
-
-	c.OnResponse(func(r *colly.Response) {
-		athleteProfileHtmlLocation := AthletesHtmlLocationFromUrl(athleteUrl)
-		err := r.Save(athleteProfileHtmlLocation)
-		if err != nil {
-			log.Fatal(err)
-		}
-	})
-
 	record := AthleteRecord{}
-
-	c.OnHTML("tbody", func(e *colly.HTMLElement) {
-		e.ForEach("tr", func(i int, rowEl *colly.HTMLElement) {
-			record = append(record, *matchFromRecordTableRow(i, rowEl))
-		})
-	})
-	c.Visit(athleteUrl)
+	for i, row := range elements {
+		record = append(record, *matchFromRecordTableRow(i, row))
+	}
 
 	return record
 }
@@ -199,11 +121,7 @@ func CreateAthleteRecord(escapedName string, athleteProfileUrl string, force boo
 
 	var record AthleteRecord = athleteRecordCached(escapedName)
 	if force {
-		htmlLocation := AthletesHtmlLocationFromEscapedName(escapedName)
-		record = TestScrapeCached(htmlLocation)
-
-		// TODO: replace above with below
-		// record = ScrapeAthletesPage(athleteProfileUrl)
+		record = ScrapeAthletesPage(athleteProfileUrl)
 	} else if len(record) > 1 {
 		return record
 	} else if athleteRecordPageCached(escapedName) {
