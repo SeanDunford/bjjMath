@@ -1,5 +1,4 @@
 # 0.0.7 -> Next
-- TODO: Implement DB Models and basic queires 
 - 
 
 # 0.0.6 -> Current
@@ -10,6 +9,12 @@
 - Need to figure out these generics can't quite wrap my head around it 
 - Figured out a workaround for the generic types: 
   I'm just returning the raw row elements. That way i can process them outside of the context of the scraper. This isn't ideal because i have to loop over the elements again but it's fine for now. Will come back to this when i'm more comfortable with go. 
+- Added a new package graph for the graph db portion of things. I think i need to completelhy rewrite the sample code but should not be a big deal i have a great starting point 
+  -- replaced the cgo sqllite3 package with libsql for easier turso integration 
+  -- had to temporarily remove graphviz bc it's breaking, will resolve late
+- Added basic data base models but still need to read data in from .csv files into the db as source of truth 
+  -- The cached html and csv files will eventually be checked for cache invalidation which will then trigger rescrapes and db-refreshes
+  -- Unsure on what cache invalidation policy should be at this time but at first probably just dates with mothly scrapers and a way to add async triggers for things like competitors having recent matches 
 
 
 # 0.0.5

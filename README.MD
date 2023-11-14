@@ -72,6 +72,7 @@ For pkg-config to find sqlite you may need to set:
 ### graph db with sqllite
 - https://github.com/actyx/ipfs-sqlite-block-store
 - https://github.com/dpapathanasiou/simple-graph-go
+- Demo Video: https://www.hytradboi.com/2022/simple-graph-sqlite-as-probably-the-only-graph-database-youll-ever-need 
 
 
 

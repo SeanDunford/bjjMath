@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/SeanDunford/bjjMath/db"
+	"github.com/SeanDunford/bjjMath/graph"
 	"github.com/SeanDunford/bjjMath/scraper"
 )
 
@@ -15,11 +16,13 @@ const LimitOfAthletes = -1
 const forceUpateTexOnly = true
 
 // TODO: Make these flags configurable through binary params and add const forceUpdateHtml = true here
-
 func main() {
 	fmt.Println("go")
 
 	db.ConnectToDb()
+	file := "importTest.sqlite3"
+
+	graph.DoTheGraphTings(file)
 
 	if forceUpateTexOnly {
 		const escapedName = "aaron-johnson"
