@@ -20,7 +20,7 @@ func main() {
 	fmt.Println("go")
 
 	db.ConnectToDb()
-	file := "importTest.sqlite3"
+	file := "db/bjjMath.db"
 
 	graph.DoTheGraphTings(file)
 
