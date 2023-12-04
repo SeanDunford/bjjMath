@@ -1,6 +1,11 @@
 package graph
 
 import (
+	"encoding/json"
+	"fmt"
+	"log"
+
+	"github.com/SeanDunford/bjjMath/scraper"
 	"github.com/SeanDunford/simpleGraphGo/simplegraph"
 	_ "github.com/libsql/libsql-client-go/libsql"
 	_ "modernc.org/sqlite"
@@ -17,6 +22,20 @@ const (
 	invested = `{"action":"invested","equity":80000,"debt":170000}`
 	divested = `{"action":"divested","amount":800,"date":"April 12, 1976"}`
 )
+
+func AddAthlete(athlete scraper.Athlete, dbFilePath string) {
+	simplegraph.Initialize(dbFilePath)
+	jsonAthlete, err := json.Marshal(athlete)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	count, err := simplegraph.AddNode(athlete.Index, []byte(jsonAthlete), dbFilePath)
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	fmt.Println(count)
+}
 
 func DoTheGraphTings(dbFilePath string) {
 	simplegraph.Initialize(dbFilePath)

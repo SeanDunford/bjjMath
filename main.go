@@ -20,19 +20,17 @@ func main() {
 	fmt.Println("go")
 
 	db.ConnectToDb()
-	file := "db/bjjMath.db"
+	dbFile := "db/bjjMath.db"
 
-	graph.DoTheGraphTings(file)
-
-	if forceUpateTexOnly {
-		const escapedName = "aaron-johnson"
-		const texUrl = "https://www.bjjheroes.com/bjj-fighters/aaron-johnson"
-		record := scraper.CreateAthleteRecord(escapedName, texUrl, forceUpateTexOnly)
-		fmt.Println("Created athlete record for " + escapedName)
-		fmt.Println(record)
-		fmt.Println("fin")
-		return
-	}
+	// if forceUpateTexOnly {
+	// 	const escapedName = "aaron-johnson"
+	// 	const texUrl = "https://www.bjjheroes.com/bjj-fighters/aaron-johnson"
+	// 	record := scraper.CreateAthleteRecord(escapedName, texUrl, forceUpateTexOnly)
+	// 	fmt.Println("Created athlete record for " + escapedName)
+	// 	fmt.Println(record)
+	// 	fmt.Println("fin")
+	// 	return
+	// }
 
 	if forceUpdateAthleteListCsv {
 		fmt.Println("Force update athletes list csv bc of flag -forceUpdateCsv")
@@ -58,6 +56,8 @@ func main() {
 			fmt.Println("Created athlete record for " + escapedName)
 			fmt.Println(record)
 		}
+
+		graph.AddAthlete(athlete, dbFile)
 	}
 
 	fmt.Println("fin")
